@@ -152,6 +152,10 @@ func (c *Controller) isAuthenticated(r *http.Request, endpoint string) bool {
 	if !c.spec.JWTEnabled {
 		return true
 	}
+	//针对static，目前是从viedo标签直接访问，未设置token不做验证了。
+	if(endpoint=="static"){
+		return true
+	}
 	token, claims := c.jwt.Validate(r.Header.Get("Authorization"))
 	if token == nil || !token.Valid {
 		return false
@@ -480,7 +484,7 @@ func (c *Controller) StaticFileHandler(w http.ResponseWriter, req *http.Request,
 		return
 	}
 	if stream.Streak.IsActive() || stream.Running {
-		flog.Debugf("%s stream.Streak Hit | Streak in FileHandler", id)
+		//flog.Debugf("%s stream.Streak Hit | Streak in FileHandler", id)
 		stream.Streak.Hit()
 		return
 	}
