@@ -81,6 +81,8 @@ type ListenSetting struct {
 // EndpointYML describes the yml structure used
 type EndpointYML struct {
 	Version   string `yaml:"version"`
+	Port   int `yaml:"port"`
+	Debug   bool `yaml:"debug"`
 	Endpoints struct {
 		Start  EndpointSetting `yaml:"start"`
 		Stop   EndpointSetting `yaml:"stop"`
@@ -116,5 +118,7 @@ func InitConfig() *Specification {
 		logrus.Errorf("error: %v", err)
 		return &s
 	}
+	s.Port=setting.Port
+	s.Debug=setting.Debug
 	return &s
 }

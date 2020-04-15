@@ -14,9 +14,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Roverr/rtsp-stream/core/auth"
-	"github.com/Roverr/rtsp-stream/core/blacklist"
-	"github.com/Roverr/rtsp-stream/core/config"
+	"rtsp-stream/core/auth"
+	"rtsp-stream/core/blacklist"
+	"rtsp-stream/core/config"
 	"github.com/julienschmidt/httprouter"
 	"github.com/riltech/streamer"
 	"github.com/sirupsen/logrus"
@@ -197,6 +197,7 @@ func (c *Controller) stopInactiveStreams() {
 		if err := stream.Stop(); err != nil {
 			logrus.Error(err)
 		}
+		os.RemoveAll(stream.StorePath)
 		logrus.Infof("%s is stopped | Inactivity cleaning", name)
 	}
 }
@@ -321,6 +322,7 @@ func (c *Controller) StopStreamHandler(w http.ResponseWriter, r *http.Request, p
 		if dto.Remove {
 			delete(c.index, s.OriginalURI)
 			delete(c.streams, dto.ID)
+			os.RemoveAll(s.StorePath)
 		}
 	}
 	logrus.Debugf("%s is stopped | StopStreamHandler", dto.ID)

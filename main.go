@@ -3,27 +3,59 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 
-	"github.com/Roverr/rtsp-stream/core"
-	"github.com/Roverr/rtsp-stream/core/config"
+	"rtsp-stream/core"
+	"rtsp-stream/core/config"
 	"github.com/sirupsen/logrus"
 )
+var staticHandler http.Handler
 
+func StaticServer(w http.ResponseWriter, req *http.Request,_ httprouter.Params) {
+	logrus.Infof("StaticServer request path %s \n",req.URL.Path)
+	if req.URL.Path != "/" {
+		fmt.Printf("request path %s",req.URL.Path)
+		logrus.Infof("request path %s \n",req.URL.Path)
+		staticHandler.ServeHTTP(w, req)
+		return
+	}
+	io.WriteString(w, "hello, world!\n")
+}
 func main() {
 	config := config.InitConfig()
+	//config.Debug=true
+	config.KeepFiles=false
+	//config.Port=9580
+	config.Audio=true
 	core.SetupLogger(config)
 	fileServer := http.FileServer(http.Dir(config.StoreDir))
 	router := httprouter.New()
 	controllers := core.NewController(config, fileServer)
-	router.GET("/", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		w.WriteHeader(http.StatusOK)
+	var dir = path.Dir("D:\\cell\\incubator\\rtsp-stream")
+	staticHandler = http.FileServer(http.Dir(dir))
+	router.GET("/files/",  StaticServer)
+	//router.GET("/html",  StaticServer)
+	//router.GET("/", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	//	w.WriteHeader(http.StatusOK)
+	//})
+	router.GET("/",  func(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
+		logrus.Infoln("files,path=",r.URL.Path)
+		var file=r.URL.Path;
+		file=strings.TrimPrefix(file,"/")
+		http.ServeFile(w, r, file)
 	})
+	//router.GET("/html",  StaticServer)
+	//router.GET("/", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	//	w.WriteHeader(http.StatusOK)
+	//})
 	if config.EndpointYML.Endpoints.List.Enabled {
 		router.GET("/list", controllers.ListStreamHandler)
 		logrus.Infoln("list endpoint enabled | MainProcess")
@@ -40,7 +72,22 @@ func main() {
 		router.POST("/stop", controllers.StopStreamHandler)
 		logrus.Infoln("stop endpoint enabled | MainProcess")
 	}
-
+	router.GET("/test", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
+		logrus.Infoln("test,path=",r.URL.Path)
+		http.ServeFile(w, r, "test.html")
+	})
+	router.GET("/test2", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
+		logrus.Infoln("test,path=",r.URL.Path)
+		http.ServeFile(w, r, "test2.html")
+	})
+	router.GET("/hls", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
+		logrus.Infoln("test,path=",r.URL.Path)
+		http.ServeFile(w, r, "hls.html")
+	})
+	router.GET("/hls.js", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params){
+		logrus.Infoln("hls.js,path=",r.URL.Path)
+		http.ServeFile(w, r, "hls.js")
+	})
 	done := controllers.ExitPreHook()
 	handler := cors.AllowAll().Handler(router)
 	if config.CORS.Enabled {

@@ -2,8 +2,7 @@ package core
 
 import (
 	"os"
-
-	"github.com/Roverr/rtsp-stream/core/config"
+	"rtsp-stream/core/config"
 	"github.com/sirupsen/logrus"
 )
 
