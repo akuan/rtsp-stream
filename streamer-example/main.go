@@ -3,7 +3,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/riltech/streamer"
+	"rtsp-stream/streamer"
 	"time"
 )
 

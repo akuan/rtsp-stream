@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>HLS测试</title>
+</head>
+<link href="http://cdn.bootcss.com/video.js/6.0.0-RC.5/alt/video-js-cdn.min.css" rel="stylesheet">
+
+<script src="http://cdn.bootcss.com/video.js/6.0.0-RC.5/video.js"></script>
+<!-- PC 端浏览器不支持播放 hls 文件(m3u8), 需要 videojs-contrib-hls 来给我们解码 -->
+<script src="http://cdn.bootcss.com/videojs-contrib-hls/5.3.3/videojs-contrib-hls.js"></script>
+
+<!-- 设置flash路径，Video.js会在不支持html5的浏览中使用flash播放视频文件 -->
+<script>
+    videojs.options.flash.swf = "video-js.swf";//此处的swf路径要改成自己的
+</script> 
+</head>
+<body>
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"
+     backdrop="false" keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onclick="closeVideo()">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="myModalLabel">
+                    模态框（Modal）标题
+                </h4>
+            </div>
+            <div class="modal-body" id="modal-body">
+				//video 标签就被动态添加到这里
+				<video width="800" height="600" controls="controls" autoplay="autoplay">
+
+<source src="http://localhost:8080/stream/cam01/index.m3u8" type="application/x-mpegURL"></source>
+
+</video>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="closeVideo()">
+                    关闭
+                </button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div> 
+<script>
+//动态添加播放器，显示模态框
+            function playVido() {
+                $("#modal-body").append("<video id=\"hls-video\" class=\"video-js vjs-default-skin  vjs-big-play-centered\" width=\"540px\" height=\"480px\"\n" +
+                    "                       playsinline webkit-playsinline\n" +
+                    "                       autoplay controls preload=\"auto\"\n" +
+                    "                       x-webkit-airplay=\"true\" x5-video-player-fullscreen=\"true\" x5-video-player-typ=\"h5\">\n" +
+                    "                    <source id=\"hls-source\" src=\"\" type=\"application/x-mpegURL\">\n" +
+                    "                </video>\n")
+                var videoUrl = "http://localhost:8080/stream/cam01/index.m3u8";
+                $("#hls-source").attr("src", videoUrl);
+                var myplayer = videojs('hls-video');
+                myplayer.play();
+                $('#myModal').modal('show');
+            }
+            
+            /**
+             * 该方法解决模态框关闭时，视频仍然播放的问题！思路就是在关闭的时候把播放器移除掉，在播放的时候重新动态添加播放器即可
+             */
+            function closeVideo() {
+                $("#hls-source").attr("src", "");
+                var oldPlayer = document.getElementById('hls-video');
+                videojs(oldPlayer).dispose();
+                $('#myModal').modal('hide');
+            }
+</script>
+</body>

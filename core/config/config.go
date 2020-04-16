@@ -83,6 +83,7 @@ type EndpointYML struct {
 	Version   string `yaml:"version"`
 	Port   int `yaml:"port"`
 	Debug   bool `yaml:"debug"`
+	JWTSecret string "yaml:jwtsecret"
 	Endpoints struct {
 		Start  EndpointSetting `yaml:"start"`
 		Stop   EndpointSetting `yaml:"stop"`
@@ -120,5 +121,8 @@ func InitConfig() *Specification {
 	}
 	s.Port=setting.Port
 	s.Debug=setting.Debug
+	if(setting.JWTSecret!=""){
+		s.Auth.JWTSecret=setting.JWTSecret
+	}
 	return &s
 }

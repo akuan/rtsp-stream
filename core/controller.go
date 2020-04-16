@@ -14,12 +14,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
+	"github.com/sirupsen/logrus"
 	"rtsp-stream/core/auth"
 	"rtsp-stream/core/blacklist"
 	"rtsp-stream/core/config"
-	"github.com/julienschmidt/httprouter"
-	"github.com/riltech/streamer"
-	"github.com/sirupsen/logrus"
+	"rtsp-stream/streamer"
 )
 
 // ErrUnexpected describes an unexpected error
