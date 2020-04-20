@@ -297,12 +297,10 @@ func (c *Controller) StopStreamHandler(w http.ResponseWriter, r *http.Request, p
 		c.sendError(w, err, http.StatusInternalServerError)
 		return
 	}
-
 	if dto.ID == "" && len(dto.Alias) == 0 {
 		c.sendError(w, err, http.StatusNotFound)
 		return
 	}
-
 	if len(dto.Alias) > 0 {
 		// redirect alias if used
 		newid, ok := c.alias[dto.Alias]
@@ -326,7 +324,9 @@ func (c *Controller) StopStreamHandler(w http.ResponseWriter, r *http.Request, p
 		}
 	}
 	logrus.Debugf("%s is stopped | StopStreamHandler", dto.ID)
-	w.WriteHeader(http.StatusOK)
+	//w.WriteHeader(http.StatusOK)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write([]byte("{\"status\":\"ok\"}"))
 }
 
 func (c *Controller) startPreloadStream(Alias string, Uri string) {
@@ -480,6 +480,7 @@ func (c *Controller) StaticFileHandler(w http.ResponseWriter, req *http.Request,
 		return
 	}
 	if stream.Streak.IsActive() || stream.Running {
+		logrus.Debugf("%s stream.Streak Hit | Streak in FileHandler", id)
 		stream.Streak.Hit()
 		return
 	}

@@ -24,10 +24,10 @@ func main() {
 	config.ProcessLogging.Enabled=true
 	config.ProcessLogging.Directory=logDir;
 	config.Audio=true
-	//config.JWTEnabled=true
+	config.JWTEnabled=false
 	core.SetupLogger(config)
-	fileServer := http.FileServer(http.Dir(config.StoreDir))
 	router := httprouter.New()
+	fileServer := http.FileServer(http.Dir(config.StoreDir))
 	controllers := core.NewController(config, fileServer)
 	router.GET("/", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		w.WriteHeader(http.StatusOK)
@@ -48,6 +48,8 @@ func main() {
 		router.POST("/stop", controllers.StopStreamHandler)
 		logrus.Infoln("stop endpoint enabled | MainProcess")
 	}
+	//clear all viedos
+	clearTempFiles(config.StoreDir)
 	done := controllers.ExitPreHook()
 	handler := cors.AllowAll().Handler(router)
 	if config.CORS.Enabled {
@@ -70,4 +72,32 @@ func main() {
 		logrus.Errorf("HTTP server Shutdown: %v", err)
 	}
 	os.Exit(0)
+}
+//clearTempFiles
+func clearTempFiles(root string){
+	defer func() {
+		//产生了panic异常
+		if err := recover(); err != nil {
+			logrus.Errorf("clearTempFiles Error: %v", err)
+		}
+	}()
+	//logrus.Debugf("clearTempFiles root is %s",root)
+   dir,err:=os.Open(root)
+   defer dir.Close()
+   if(err!=nil){
+	   logrus.Errorf("clearTempFiles Error: %v", err)
+	   return
+   }
+	children,err2:=dir.Readdir(0)
+	if err2!=nil{
+		logrus.Errorf("clearTempFiles Readdir Error: %v", err)
+		return
+	}
+	for _,ch :=range children{
+		if(ch.IsDir()){
+			fullpath:=fmt.Sprintf("%s/%s",root,ch.Name())
+			logrus.Debugf("find %s will remove",fullpath)
+			os.RemoveAll(fullpath)
+		}
+	}
 }

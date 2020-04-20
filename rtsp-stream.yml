@@ -1,7 +1,7 @@
 version: 1.0
 port: 8080
 debug:  true
-jwtsecret: hlsscnu
+# jwtsecret: hlsscnu
 endpoints:
   start:
     enabled: true

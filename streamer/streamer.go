@@ -166,6 +166,8 @@ func (strm *Stream) Restart() *sync.WaitGroup {
 	if strm == nil {
 		return nil
 	}
+	//clean file frist
+	os.RemoveAll(strm.StorePath)
 	strm.Mux.Lock()
 	if strm.CMD != nil && strm.CMD.ProcessState != nil {
 		strm.CMD.Process.Kill()

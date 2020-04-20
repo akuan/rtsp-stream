@@ -13,9 +13,16 @@
 	<input id=url type=text value="http://localhost:8080/stream/cam01/index.m3u8" style="width:660px;"/>
 	<input type=button value="play" onclick="play()"/>
 	<br>
-    <video id="video" controls style="width:640px;height:480px;" playbackRate='1.5'></video>
+    <video id="video" controls style="width:640px;height:480px;" playbackRate='1.2'></video>
     <script>
 	var Hls = window.Hls;
+	Hls.xhr.beforeRequest = function (options) {
+        var token = JSON.parse(localStorage.getItem("UserAuthenticated")).Token;
+        options.headers = options.headers || {};
+        options.headers.Authorization = 'Bearer ' + token;
+        console.log('options', options);;
+        return options;
+    }
 	//var url = 'http://weblive.hebtv.com/live/hbys_bq/index.m3u8'
 	function play(){
 	var url = document.getElementById("url").value;
