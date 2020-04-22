@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/natefinch/lumberjack"
-	"github.com/sirupsen/logrus"
+	flog "github.com/akuan/logrus"
 
 	"github.com/Roverr/hotstreak"
 )
@@ -56,7 +56,7 @@ func NewStream(
 	path := fmt.Sprintf("%s/%s", storingDirectory, id)
 	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
-		logrus.Error(err)
+		flog.Error(err)
 		return nil, ""
 	}
 	process := NewProcess(keepFiles, audio, loggingOpts)
@@ -95,7 +95,7 @@ func NewStream(
 		Running:     false,
 		WaitTimeOut: waitTimeOut,
 	}
-	logrus.Debugf("%s store path created | Stream", stream.StorePath)
+	flog.Debugf("%s store path created | Stream", stream.StorePath)
 	return &stream, id
 }
 
@@ -111,10 +111,10 @@ func (strm *Stream) Start() *sync.WaitGroup {
 	indexPath := fmt.Sprintf("%s/index.m3u8", strm.StorePath)
 	// Run the transcoding, resolve stream if it errors out
 	go func() {
-		logrus.Debugf("%s is starting FFMPEG process | Stream", strm.ID)
+		flog.Debugf("%s is starting FFMPEG process | Stream", strm.ID)
 		if err := strm.CMD.Run(); err != nil {
 			once.Do(func() {
-				logrus.Errorf("%s process could not start. | Stream\n Error: %s",
+				flog.Errorf("%s process could not start. | Stream\n Error: %s",
 					strm.ID,
 					err,
 				)
@@ -133,7 +133,7 @@ func (strm *Stream) Start() *sync.WaitGroup {
 				continue
 			}
 			once.Do(func() {
-				logrus.Debugf("%s - %s successfully started - index.m3u8 found | Stream",
+				flog.Debugf("%s - %s successfully started - index.m3u8 found | Stream",
 					strm.ID,
 					strm.OriginalURI,
 				)
@@ -148,7 +148,7 @@ func (strm *Stream) Start() *sync.WaitGroup {
 	go func() {
 		<-time.After(strm.WaitTimeOut)
 		once.Do(func() {
-			logrus.Errorf(
+			flog.Errorf(
 				"%s process starting timed out | Stream",
 				strm.ID,
 			)
@@ -185,7 +185,7 @@ func (strm *Stream) Restart() *sync.WaitGroup {
 func Retry(attempts int, sleep time.Duration, fn func() error) error {
 	if err := fn(); err != nil {
 		if attempts--; attempts > 0 {
-			logrus.Warnf("retry func error: %s. attemps #%d after %s.", err.Error(), attempts, sleep)
+			flog.Warnf("retry func error: %s. attemps #%d after %s.", err.Error(), attempts, sleep)
 			time.Sleep(sleep)
 			return Retry(attempts, 2*sleep, fn)
 		}
@@ -203,11 +203,11 @@ func (strm *Stream) Stop() error {
 	strm.Running = false
 	if !strm.KeepFiles {
 		defer func() {
-			logrus.Debugf("%s directory is being removed | Stream", strm.StorePath)
+			flog.Debugf("%s directory is being removed | Stream", strm.StorePath)
 			//wait 3 seconds
 			time.Sleep(time.Second*3)
 			if err := os.RemoveAll(strm.StorePath); err != nil {
-				logrus.Error(err)
+				flog.Error(err)
 			}
 		}()
 	}

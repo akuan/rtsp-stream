@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	flog "github.com/akuan/logrus"
 )
 
 // IList describes the user panel of a Blacklist
@@ -40,7 +40,7 @@ func (b *List) AddOrIncrease(uri string) IList {
 		return b
 	}
 	if record.(IRecord).IsBanned() {
-		logrus.Debugf(
+		flog.Debugf(
 			"%s is still banned until %s | Blacklist",
 			uri,
 			record.(IRecord).GetBanTime().Format(time.RFC3339),
@@ -48,11 +48,11 @@ func (b *List) AddOrIncrease(uri string) IList {
 		return b
 	}
 	if record.(IRecord).Increase().GetCount() > b.limit {
-		logrus.Infof("%s is banned beacuse of reaching limit | Blacklist", uri)
+		flog.Infof("%s is banned beacuse of reaching limit | Blacklist", uri)
 		ban := time.Now().Add(b.freeAfter)
 		record.(IRecord).SetBanTime(&ban).ResetCount()
 	}
-	logrus.Debugf(
+	flog.Debugf(
 		"%s is now with %d of %d on the blacklist | Blacklist",
 		uri,
 		record.(IRecord).GetCount(),

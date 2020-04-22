@@ -3,15 +3,15 @@ package core
 import (
 	"os"
 	"rtsp-stream/core/config"
-	"github.com/sirupsen/logrus"
+	flog "github.com/akuan/logrus"
 )
 
 // SetupLogger sets the logger for the proper settings based on the environment
 func SetupLogger(spec *config.Specification) {
-	logrus.SetOutput(os.Stdout)
+	flog.SetOutput(os.Stdout)
 	if spec.Debug {
-		logrus.SetLevel(logrus.DebugLevel)
+		flog.SetLevel(flog.DebugLevel)
 		return
 	}
-	logrus.SetLevel(logrus.InfoLevel)
+	flog.SetLevel(flog.InfoLevel)
 }

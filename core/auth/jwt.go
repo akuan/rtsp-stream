@@ -8,7 +8,7 @@ import (
 
 	"rtsp-stream/core/config"
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/sirupsen/logrus"
+	flog "github.com/akuan/logrus"
 )
 
 // JWT interface describes how token validation looks like
@@ -57,13 +57,13 @@ func NewJWTProvider(settings config.Auth) (*JWTProvider, error) {
 func (jp JWTProvider) Validate(tokenString string) (*jwt.Token, *Claim) {
 	ts := strings.Replace(tokenString, "Bearer ", "", -1)
 	if ts == "" {
-		logrus.Debug("No token found")
+		flog.Debug("No token found")
 		return nil, nil
 	}
 	claims := &Claim{}
 	token, err := jwt.ParseWithClaims(ts, claims, jp.verify)
 	if err != nil {
-		logrus.Errorf("Error at token verification: %s | JWTProvider", err)
+		flog.Errorf("Error at token verification: %s | JWTProvider", err)
 		return nil, nil
 	}
 	return token, claims

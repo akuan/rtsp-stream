@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/sirupsen/logrus"
+	flog "github.com/akuan/logrus"
 	"rtsp-stream/core/auth"
 	"rtsp-stream/core/blacklist"
 	"rtsp-stream/core/config"
@@ -85,7 +85,7 @@ var _ IController = (*Controller)(nil)
 func NewController(spec *config.Specification, fileServer http.Handler) *Controller {
 	provider, err := auth.NewJWTProvider(spec.Auth)
 	if err != nil {
-		logrus.Fatal("Could not create new JWT provider: ", err)
+		flog.Fatal("Could not create new JWT provider: ", err)
 	}
 	ctrl := &Controller{
 		spec,
@@ -186,19 +186,19 @@ func (c *Controller) stopInactiveStreams() {
 	for name, stream := range c.streams {
 		// If the streak is active, there is no need for stopping
 		if stream.Streak.IsActive() {
-			logrus.Infof("%s is active. Skipping. | Inactivity cleaning", name)
+			flog.Infof("%s is active. Skipping. | Inactivity cleaning", name)
 			continue
 		}
 		if !stream.Running {
-			logrus.Debugf("%s is not running. Skipping. | Inactivity cleaning", name)
+			flog.Debugf("%s is not running. Skipping. | Inactivity cleaning", name)
 			continue
 		}
-		logrus.Infof("%s is being stopped | Inactivity cleaning", name)
+		flog.Infof("%s is being stopped | Inactivity cleaning", name)
 		if err := stream.Stop(); err != nil {
-			logrus.Error(err)
+			flog.Error(err)
 		}
 		os.RemoveAll(stream.StorePath)
-		logrus.Infof("%s is stopped | Inactivity cleaning", name)
+		flog.Infof("%s is stopped | Inactivity cleaning", name)
 	}
 }
 
@@ -215,11 +215,11 @@ func (c *Controller) sendError(w http.ResponseWriter, err error, status int) {
 // sendStart sends response for clients calling /start
 func (c *Controller) sendStart(w http.ResponseWriter, success bool, stream *streamer.Stream, alias string) {
 	if !stream.Running {
-		logrus.Debugln("Sending out error for request timeout | StartHandler")
+		flog.Debugln("Sending out error for request timeout | StartHandler")
 		c.sendError(w, ErrTimeout, http.StatusRequestTimeout)
 		return
 	}
-	logrus.Infof("%s started processing | StartHandler", stream.OriginalURI)
+	flog.Infof("%s started processing | StartHandler", stream.OriginalURI)
 
 	// use alias if provided
 	name := stream.ID
@@ -286,14 +286,14 @@ func (c *Controller) StopStreamHandler(w http.ResponseWriter, r *http.Request, p
 	}
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		logrus.Error(err)
+		flog.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	dto := StopDTO{}
 	err = json.Unmarshal(b, &dto)
 	if err != nil {
-		logrus.Error(err)
+		flog.Error(err)
 		c.sendError(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -310,10 +310,10 @@ func (c *Controller) StopStreamHandler(w http.ResponseWriter, r *http.Request, p
 	}
 
 	if s, ok := c.streams[dto.ID]; ok {
-		logrus.Infof("%s is being stopped | StopStreamHandler", dto.ID)
+		flog.Infof("%s is being stopped | StopStreamHandler", dto.ID)
 		err := s.Stop()
 		if err != nil {
-			logrus.Error(err)
+			flog.Error(err)
 			c.sendError(w, err, http.StatusInternalServerError)
 			return
 		}
@@ -323,14 +323,14 @@ func (c *Controller) StopStreamHandler(w http.ResponseWriter, r *http.Request, p
 			os.RemoveAll(s.StorePath)
 		}
 	}
-	logrus.Debugf("%s is stopped | StopStreamHandler", dto.ID)
+	flog.Debugf("%s is stopped | StopStreamHandler", dto.ID)
 	//w.WriteHeader(http.StatusOK)
 	w.Header().Add("Content-Type", "application/json")
 	w.Write([]byte("{\"status\":\"ok\"}"))
 }
 
 func (c *Controller) startPreloadStream(Alias string, Uri string) {
-	logrus.Debugf("%s is being initialized", Uri)
+	flog.Debugf("%s is being initialized", Uri)
 
 	_, knownStream := c.index[Uri]
 	if knownStream {
@@ -371,7 +371,7 @@ func (c *Controller) startPreloadStream(Alias string, Uri string) {
 	c.blacklist.Remove(Uri)
 	delete(c.preload, Alias)
 
-	logrus.Infoln("started stream /stream/" + streamName + "/index.m3u8")
+	flog.Infoln("started stream /stream/" + streamName + "/index.m3u8")
 }
 
 // StartStreamHandler is an HTTP handler for the POST /start endpoint
@@ -382,13 +382,13 @@ func (c *Controller) StartStreamHandler(w http.ResponseWriter, r *http.Request, 
 	}
 	var dto StreamDTO
 	if err := c.marshalValidatedURI(&dto, r.Body); err != nil {
-		logrus.Error(err)
+		flog.Error(err)
 		c.sendError(w, err, http.StatusBadRequest)
 		return
 	}
-	logrus.Debugf("%s is requested on /start | StartHandler", dto.URI)
+	flog.Debugf("%s is requested on /start | StartHandler", dto.URI)
 	if c.blacklist.IsBanned(dto.URI) {
-		logrus.Infof("%s is rejected because of blacklist | StartHandler", dto.URI)
+		flog.Infof("%s is rejected because of blacklist | StartHandler", dto.URI)
 		c.sendError(w, fmt.Errorf("%s cannot be started", dto.URI), http.StatusTooManyRequests)
 		return
 	}
@@ -396,7 +396,7 @@ func (c *Controller) StartStreamHandler(w http.ResponseWriter, r *http.Request, 
 	if knownStream {
 		stream, ok := c.streams[index]
 		if !ok {
-			logrus.Errorf("Missing index for URI: %s | StartHandler", dto.URI)
+			flog.Errorf("Missing index for URI: %s | StartHandler", dto.URI)
 			c.sendError(w, ErrUnexpected, http.StatusInternalServerError)
 			return
 		}
@@ -462,7 +462,7 @@ func (c *Controller) StaticFileHandler(w http.ResponseWriter, req *http.Request,
 	// start preload if registered
 	uri, ok := c.preload[id]
 	if ok {
-		logrus.Infoln("starting preload " + id + " now")
+		flog.Infoln("starting preload " + id + " now")
 		c.startPreloadStream(id, uri)
 	}
 
@@ -470,7 +470,7 @@ func (c *Controller) StaticFileHandler(w http.ResponseWriter, req *http.Request,
 	newid, ok := c.alias[id]
 	if ok {
 		url := "/stream/" + newid + "/index.m3u8"
-		logrus.Infoln("redirecting alias " + id + " to " + url)
+		flog.Infoln("redirecting alias " + id + " to " + url)
 		http.Redirect(w, req, url, 302)
 		return
 	}
@@ -480,11 +480,11 @@ func (c *Controller) StaticFileHandler(w http.ResponseWriter, req *http.Request,
 		return
 	}
 	if stream.Streak.IsActive() || stream.Running {
-		logrus.Debugf("%s stream.Streak Hit | Streak in FileHandler", id)
+		flog.Debugf("%s stream.Streak Hit | Streak in FileHandler", id)
 		stream.Streak.Hit()
 		return
 	}
-	logrus.Debugf("%s is getting restarted via file requests | FileHandler", id)
+	flog.Debugf("%s is getting restarted via file requests | FileHandler", id)
 	stream.Restart().Wait()
 }
 
@@ -497,12 +497,12 @@ func (c *Controller) ExitPreHook() chan bool {
 	go func() {
 		<-ch
 		for uri, strm := range c.streams {
-			logrus.Debugf("Closing processing of %s", uri)
+			flog.Debugf("Closing processing of %s", uri)
 			if err := strm.Stop(); err != nil {
-				logrus.Error(err)
+				flog.Error(err)
 				return
 			}
-			logrus.Debugf("Succesfully closed processing for %s", uri)
+			flog.Debugf("Succesfully closed processing for %s", uri)
 		}
 		done <- true
 	}()

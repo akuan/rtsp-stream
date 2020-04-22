@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	flog "github.com/akuan/logrus"
 
 	"github.com/kelseyhightower/envconfig"
 	yaml "gopkg.in/yaml.v2"
@@ -111,12 +111,12 @@ func InitConfig() *Specification {
 	}()
 	dat, err := ioutil.ReadFile("rtsp-stream.yml")
 	if err != nil {
-		logrus.Errorf("error: %v", err)
+		flog.Errorf("error: %v", err)
 		return &s
 	}
 	err = yaml.Unmarshal(dat, &setting)
 	if err != nil {
-		logrus.Errorf("error: %v", err)
+		flog.Errorf("error: %v", err)
 		return &s
 	}
 	s.Port=setting.Port

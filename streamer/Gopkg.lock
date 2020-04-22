@@ -35,7 +35,7 @@
 
 [[projects]]
   digest = "1:04457f9f6f3ffc5fea48e71d62f2ca256637dee0a04d710288e27e05c8b41976"
-  name = "github.com/sirupsen/logrus"
+  name = "github.com/akuan/logrus"
   packages = ["."]
   pruneopts = "UT"
   revision = "839c75faf7f98a33d445d181f3018b5c3409a45e"
@@ -56,7 +56,7 @@
     "github.com/Roverr/hotstreak",
     "github.com/google/uuid",
     "github.com/natefinch/lumberjack",
-    "github.com/sirupsen/logrus",
+    "github.com/akuan/logrus",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
