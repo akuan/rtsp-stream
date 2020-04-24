@@ -25,7 +25,7 @@ func init() {
 	flog.SetLevel(flog.TraceLevel)
 	hook, err := NewHook(
 		&LogFile{
-			Filename:   "logs/rtsp-general.log",
+			Filename:   "servicelog/rtsp-general.log",
 			MaxSize:    60,
 			MaxBackups: 30,
 			MaxAge:     30,
@@ -36,10 +36,10 @@ func init() {
 		textFmt,
 		&LogFileOpts{
 			flog.InfoLevel: &LogFile{
-				Filename: "logs/rtsp-info.log",
+				Filename: "servicelog/rtsp-info.log",
 			},
 			flog.ErrorLevel: &LogFile{
-				Filename:   "logs/rtsp-error.log",
+				Filename:   "servicelog/rtsp-error.log",
 				MaxSize:    60,
 				MaxBackups: 30,
 				MaxAge:     30,
@@ -126,7 +126,7 @@ func InitLog() *flog.Logger {
 }
 
 func cleanOutDateLog() {
-	lr := "logs"
+	lr := "servicelog"
 	str := fmt.Sprintf("%dh", -90*24) //90天前
 	d, _ := time.ParseDuration(str)
 	nityDays := time.Now().Add(d)
@@ -153,7 +153,7 @@ func cleanOutDateLog() {
 }
 
 func badCmdMethod() {
-	strCmd := `/p logs /s /m *.log /d -1 /c "cmd /c del @file" `
+	strCmd := `/p servicelog /s /m *.log /d -1 /c "cmd /c del @file" `
 	cmd := exec.Command("forfiles", strCmd)
 	logrus.Infof("Start Clean...%v ", strCmd)
 	//cmd.Stdin = strings.NewReader(strCmd)
